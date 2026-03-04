@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: quran_app_postgres
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: quran_db
+      # Enable UTF-8 encoding for Arabic support with diacritics
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=en_US.UTF-8"
+      LC_ALL: en_US.UTF-8
+      LANG: en_US.UTF-8
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./db/data:/var/lib/postgresql/data
+      # Mount all SQL files from db folder
+      - ./db:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d quran_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - quran_network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: quran_app_backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - quran_network
+    command: uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
+
+networks:
+  quran_network:
+    driver: bridge

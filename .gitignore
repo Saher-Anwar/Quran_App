@@ -1,0 +1,21 @@
+# Database data
+db/data/
+
+# Environment files
+*.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
