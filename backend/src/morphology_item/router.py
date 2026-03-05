@@ -42,31 +42,7 @@ async def create_morphology_item(
     return morphology_item
 
 
-@router.get("/{item_id}", response_model=MorphologyItemResponse)
-async def get_morphology_item(
-    item_id: int,
-    db: AsyncSession = Depends(get_db)
-):
-    """
-    Get a morphology item by its ID.
-
-    Args:
-        item_id: ID of the morphology item to retrieve
-        db: Database session
-
-    Returns:
-        Morphology item data with all morphological information
-    """
-    morphology_item = await MorphologyItemService.get_morphology_item_by_id(db, item_id)
-    if not morphology_item:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Morphology item with ID {item_id} not found"
-        )
-    return morphology_item
-
-
-@router.get("/reference/{chapter}/{verse}/{word_num}/{token}", response_model=MorphologyItemResponse)
+@router.get("/{chapter}/{verse}/{word_num}/{token}", response_model=MorphologyItemResponse)
 async def get_morphology_item_by_reference(
     chapter: int,
     verse: int,

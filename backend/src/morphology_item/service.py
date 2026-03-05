@@ -40,26 +40,6 @@ class MorphologyItemService:
         return morphology_item
 
     @staticmethod
-    async def get_morphology_item_by_id(
-        db: AsyncSession,
-        item_id: int
-    ) -> Optional[MorphologyItem]:
-        """
-        Get a morphology item by its ID.
-
-        Args:
-            db: Database session
-            item_id: ID of the morphology item to retrieve
-
-        Returns:
-            MorphologyItem object if found, None otherwise
-        """
-        result = await db.execute(
-            select(MorphologyItem).where(MorphologyItem.id == item_id)
-        )
-        return result.scalar_one_or_none()
-
-    @staticmethod
     async def get_morphology_item_by_reference(
         db: AsyncSession,
         chapter: int,

@@ -21,7 +21,6 @@ class MorphologyItemCreate(MorphologyItemBase):
 
 class MorphologyItemResponse(MorphologyItemBase):
     """Schema for Morphology Item response."""
-    id: int
 
     class Config:
         from_attributes = True

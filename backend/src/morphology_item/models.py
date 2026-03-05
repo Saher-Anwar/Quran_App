@@ -8,11 +8,10 @@ class MorphologyItem(Base):
 
     __tablename__ = "morphology_items"
 
-    id = Column(Integer, primary_key=True, index=True)
-    chapter = Column(Integer, nullable=False, index=True)
-    verse = Column(Integer, nullable=False, index=True)
-    word_num = Column(Integer, nullable=False, index=True)
-    token = Column(Integer, nullable=False, index=True)
+    chapter = Column(Integer, primary_key=True)
+    verse = Column(Integer, primary_key=True)
+    word_num = Column(Integer, primary_key=True)
+    token = Column(Integer, primary_key=True)
     word = Column(String(255))  # Arabic word (optional)
     tag = Column(String(50), nullable=False)  # Part of speech tag
     info = Column(Text, nullable=False)  # Morphological information
