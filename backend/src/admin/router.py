@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
 import subprocess
+import sys
 
 from src.database import get_db
 from src.config import settings
@@ -107,6 +108,12 @@ async def build_morphology():
             timeout=600  # 10 minute timeout
         )
 
+        # Print output to container logs
+        if result.stdout:
+            print(result.stdout, file=sys.stderr, flush=True)
+        if result.stderr:
+            print(result.stderr, file=sys.stderr, flush=True)
+
         if result.returncode != 0:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -155,6 +162,12 @@ async def build_isms():
             text=True,
             timeout=600  # 10 minute timeout
         )
+
+        # Print output to container logs
+        if result.stdout:
+            print(result.stdout, file=sys.stderr, flush=True)
+        if result.stderr:
+            print(result.stderr, file=sys.stderr, flush=True)
 
         if result.returncode != 0:
             raise HTTPException(
