@@ -1,4 +1,4 @@
-.PHONY: help migration upgrade downgrade restart test build-morphology clean
+.PHONY: help migration upgrade downgrade restart test build-morphology clear-db logs logs-follow clean
 
 help:
 	@echo "Available commands:"
@@ -8,6 +8,9 @@ help:
 	@echo "  make restart                  - Restart backend container"
 	@echo "  make test                     - Run pytest tests"
 	@echo "  make build-morphology         - Run morphology database builder"
+	@echo "  make clear-db                 - Clear all data from database tables"
+	@echo "  make logs                     - Show backend container logs"
+	@echo "  make logs-follow              - Follow backend container logs (live)"
 	@echo "  make clean                    - Clean up __pycache__ and .pyc files"
 
 migration:
@@ -31,6 +34,15 @@ test:
 
 build-morphology:
 	docker exec quran_app_backend python database_builder/build_morphology.py
+
+clear-db:
+	curl -X DELETE "http://localhost:8000/api/admin/clear-database?confirm=YES_DELETE_ALL"
+
+logs:
+	docker logs quran_app_backend
+
+logs-follow:
+	docker logs -f quran_app_backend
 
 clean:
 	find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
