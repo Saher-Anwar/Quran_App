@@ -1,0 +1,1 @@
+"""Ism (Word) module."""

@@ -11,6 +11,7 @@ from src.database import Base
 
 # Import all models here for autogenerate to detect them
 from src.morphology_item.models import MorphologyItem  # noqa: F401
+from src.ism.models import IsmItem  # noqa: F401
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
