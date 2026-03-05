@@ -12,6 +12,7 @@ from src.database import Base
 # Import all models here for autogenerate to detect them
 from src.models import Surah  # noqa: F401
 from src.verse.models import Verse  # noqa: F401
+from src.morphology_item.models import MorphologyItem  # noqa: F401
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
