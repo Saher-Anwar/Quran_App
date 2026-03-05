@@ -39,10 +39,8 @@ async def health_check():
 
 
 # Import and include routers here
-from src.verse.router import router as verse_router
 from src.admin.router import router as admin_router
 from src.morphology_item.router import router as morphology_item_router
 
-app.include_router(verse_router, prefix="/api/verses", tags=["Verses"])
 app.include_router(admin_router, prefix="/api/admin", tags=["Admin"])
 app.include_router(morphology_item_router, prefix="/api/morphology_item", tags=["Morphology"])

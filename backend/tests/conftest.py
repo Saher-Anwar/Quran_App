@@ -40,15 +40,3 @@ async def client(db_session: AsyncSession):
 
     # Clear overrides after test
     app.dependency_overrides.clear()
-
-
-@pytest.fixture
-def sample_verse_data():
-    """Provide sample verse data for tests."""
-    return {
-        "surah_number": 1,
-        "verse_number": 1,
-        "text_arabic": "بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ",
-        "text_simple": "بسم الله الرحمن الرحيم",
-        "translation_english": "In the name of Allah, the Entirely Merciful, the Especially Merciful."
-    }

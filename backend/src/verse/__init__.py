@@ -1,1 +1,0 @@
-"""Verse management module."""
