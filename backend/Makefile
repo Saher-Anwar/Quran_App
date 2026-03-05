@@ -33,7 +33,8 @@ test:
 	docker exec quran_app_backend pytest
 
 build-morphology:
-	docker exec -d quran_app_backend python database_builder/build_morphology.py
+	@curl -X POST "http://localhost:8000/api/admin/build-morphology"
+	@echo ""
 
 clear-db:
 	@curl -X DELETE "http://localhost:8000/api/admin/clear-database?confirm=YES_DELETE_ALL"
