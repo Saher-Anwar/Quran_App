@@ -36,7 +36,8 @@ build-morphology:
 	docker exec -d quran_app_backend python database_builder/build_morphology.py
 
 clear-db:
-	curl -X DELETE "http://localhost:8000/api/admin/clear-database?confirm=YES_DELETE_ALL"
+	@curl -X DELETE "http://localhost:8000/api/admin/clear-database?confirm=YES_DELETE_ALL"
+	@echo ""
 
 logs:
 	docker logs --tail 20 quran_app_backend

@@ -9,7 +9,7 @@ from src.config import settings
 # Create sync engine for Alembic migrations
 sync_engine = create_engine(
     settings.DATABASE_URL,
-    echo=settings.DEBUG,
+    echo=False,  # Disable SQL query logging
     pool_pre_ping=True,
     # Ensure proper encoding for Arabic characters
     connect_args={
@@ -20,7 +20,7 @@ sync_engine = create_engine(
 # Create async engine for FastAPI operations
 async_engine = create_async_engine(
     settings.ASYNC_DATABASE_URL,
-    echo=settings.DEBUG,
+    echo=False,  # Disable SQL query logging
     poolclass=NullPool,
     # Ensure proper encoding for Arabic characters
     connect_args={
