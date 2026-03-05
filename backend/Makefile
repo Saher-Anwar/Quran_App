@@ -9,8 +9,8 @@ help:
 	@echo "  make test                     - Run pytest tests"
 	@echo "  make build-morphology         - Run morphology database builder"
 	@echo "  make clear-db                 - Clear all data from database tables"
-	@echo "  make logs                     - Show backend container logs"
-	@echo "  make logs-follow              - Follow backend container logs (live)"
+	@echo "  make logs                     - Show backend container logs (last 20)"
+	@echo "  make logs-live              - Follow backend container logs (live)"
 	@echo "  make clean                    - Clean up __pycache__ and .pyc files"
 
 migration:
@@ -39,9 +39,9 @@ clear-db:
 	curl -X DELETE "http://localhost:8000/api/admin/clear-database?confirm=YES_DELETE_ALL"
 
 logs:
-	docker logs quran_app_backend
+	docker logs --tail 20 quran_app_backend
 
-logs-follow:
+logs-live:
 	docker logs -f quran_app_backend
 
 clean:
