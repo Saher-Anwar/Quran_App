@@ -26,11 +26,11 @@ async def clear_database(
     Returns:
         Success message with count of deleted records
     """
-    # Safety check - only allow in development
-    if settings.environment != "dev":
+    # Safety check - only allow in debug/development mode
+    if not settings.DEBUG:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="This endpoint is only available in development environment"
+            detail="This endpoint is only available in debug/development mode"
         )
 
     # Require explicit confirmation
@@ -83,11 +83,11 @@ async def clear_verses(
     Returns:
         Success message with count of deleted verses
     """
-    # Safety check - only allow in development
-    if settings.environment != "dev":
+    # Safety check - only allow in debug/development mode
+    if not settings.DEBUG:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="This endpoint is only available in development environment"
+            detail="This endpoint is only available in debug/development mode"
         )
 
     try:
