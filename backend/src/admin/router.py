@@ -129,3 +129,52 @@ async def build_morphology():
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to run build script: {str(e)}"
         )
+
+
+@router.post("/build-isms")
+async def build_isms():
+    """
+    Build isms database from quran-morphology.txt file.
+
+    Executes the build_isms.py script to populate the database with ism (noun) data.
+
+    Returns:
+        Success message with script output
+    """
+    # Safety check - only allow in debug/development mode
+    if not settings.DEBUG:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="This endpoint is only available in debug/development mode"
+        )
+
+    try:
+        result = subprocess.run(
+            ["python", "database_builder/build_isms.py"],
+            capture_output=True,
+            text=True,
+            timeout=600  # 10 minute timeout
+        )
+
+        if result.returncode != 0:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Script failed: {result.stderr}"
+            )
+
+        return {
+            "message": "Isms database built successfully",
+            "output": result.stdout,
+            "errors": result.stderr if result.stderr else None
+        }
+
+    except subprocess.TimeoutExpired:
+        raise HTTPException(
+            status_code=status.HTTP_504_GATEWAY_TIMEOUT,
+            detail="Build script timed out after 10 minutes"
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to run build script: {str(e)}"
+        )

@@ -1,4 +1,4 @@
-.PHONY: help migration upgrade downgrade restart test build-morphology clear-db logs logs-follow clean
+.PHONY: help migration upgrade downgrade restart test build-morphology build-isms clear-db logs logs-follow clean
 
 help:
 	@echo "Available commands:"
@@ -7,7 +7,8 @@ help:
 	@echo "  make downgrade                - Downgrade alembic by 1 revision"
 	@echo "  make restart                  - Restart backend container"
 	@echo "  make test                     - Run pytest tests"
-	@echo "  make build-morphology         - Run morphology database builder"
+	@echo "  make morphology         			 - Run morphology database builder"
+	@echo "  make isms               			 - Run isms database builder"
 	@echo "  make clear-db                 - Clear all data from database tables"
 	@echo "  make logs                     - Show backend container logs (last 20)"
 	@echo "  make logs-live              - Follow backend container logs (live)"
@@ -32,8 +33,12 @@ restart:
 test:
 	docker exec quran_app_backend pytest
 
-build-morphology:
+morphology:
 	@curl -X POST "http://localhost:8000/api/admin/build-morphology"
+	@echo ""
+
+isms:
+	@curl -X POST "http://localhost:8000/api/admin/build-isms"
 	@echo ""
 
 clear-db:

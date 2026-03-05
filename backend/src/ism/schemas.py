@@ -11,7 +11,7 @@ class IsmItemBase(BaseModel):
     status: str = Field(..., min_length=1, max_length=50, description="Grammatical status")
     number: str = Field(..., min_length=1, max_length=50, description="Number (singular, dual, plural)")
     gender: str = Field(..., min_length=1, max_length=50, description="Gender (masculine, feminine)")
-    heaviness: HeavinessEnum = Field(..., description="Heaviness (light or heavy)")
+    heaviness: Optional[HeavinessEnum] = Field(None, description="Heaviness (light or heavy)")
     ism_type: Optional[IsmTypeEnum] = Field(None, description="Type (proper or common)")
     flexibility: Optional[FlexibilityEnum] = Field(None, description="Flexibility (flexible, partial, or non-flexible)")
     root: Optional[str] = Field(None, max_length=255, description="Root word")

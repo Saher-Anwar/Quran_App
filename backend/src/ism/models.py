@@ -32,11 +32,11 @@ class IsmItem(Base):
     status = Column(String(50), nullable=False)
     number = Column(String(50), nullable=False)
     gender = Column(String(50), nullable=False)
-    heaviness = Column(Enum(HeavinessEnum), nullable=False)
-    ism_type = Column(Enum(IsmTypeEnum))  # Renamed from 'type' to avoid duplicate
-    flexibility = Column(Enum(FlexibilityEnum))
-    root = Column(String(255))
-    lem = Column(String(255))
+    heaviness = Column(Enum(HeavinessEnum))  # Optional
+    ism_type = Column(Enum(IsmTypeEnum))  # Optional
+    flexibility = Column(Enum(FlexibilityEnum))  # Optional
+    root = Column(String(255))  # Optional
+    lem = Column(String(255))  # Optional
     chapter = Column(Integer, nullable=False)
     verse = Column(Integer, nullable=False)
     word_num = Column(Integer, nullable=False)
