@@ -42,6 +42,18 @@ services:
       - quran_network
     command: uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
 
+  adminer:
+    image: adminer:latest
+    container_name: quran_app_adminer
+    ports:
+      - "8080:8080"
+    networks:
+      - quran_network
+    depends_on:
+      - postgres
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+
 networks:
   quran_network:
     driver: bridge
