@@ -129,12 +129,21 @@ def extract_gender_number(segment):
     Returns:
         str: The gender extracted from the segment.
     """
-    possible_results = ["M", "F", "MD", "FD", "MP", "FP"]
-    for gen_num in possible_results:
-        if gen_num in segment:
-            return (gen_num, "S") if len(gen_num) == 1 else (gen_num[0], gen_num[-1])
+    # Possible values = "M", "F", "MD", "FD", "MP", "FP"
+    if segment not in ["M", "F", "MD", "FD", "MP", "FP"]:
+        return None
     
-    return None
+    gender = 'M' if 'M' in segment else 'F'
+    number = None
+
+    if 'P' in segment:
+        number = 'P'
+    elif 'D' in segment:
+        number = 'D'
+    else:
+        number = 'S'
+    
+    return None if not gender or not number else (gender, number)
 
 def parse_file(file_path):
     """
