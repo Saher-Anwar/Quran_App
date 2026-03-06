@@ -1,27 +1,31 @@
-import asyncio
-import sys
-from pathlib import Path
+"""MorphologyBuilder class for building morphology database from morphology file."""
+from sqlalchemy.ext.asyncio import AsyncSession
 
-# Add parent directory to path so we can import from src
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
-from src.database import AsyncSessionLocal
 from src.morphology_item.models import MorphologyItem
 
 
-async def build_corpus_database(file_path: str, batch_size: int = 1000):
-    """
-    Build a corpus database from a text file containing corpus data.
+class MorphologyBuilder:
+    """Builder class for parsing and inserting morphology data into database."""
 
-    This function reads a text file specified by file_path, where each line
-    contains a corpus data for each word. It directly inserts into the database
-    using batch processing for optimal performance.
+    def __init__(self, db: AsyncSession):
+        """Initialize the builder with a database session."""
+        self.db = db
 
-    Parameters:
-    file_path (str): The path to the text file containing corpus data.
-    batch_size (int): Number of records to insert in each batch (default: 1000)
-    """
-    async with AsyncSessionLocal() as db:
+    async def build_database(self, file_path: str, batch_size: int = 1000) -> dict:
+        """
+        Build a corpus database from a text file containing corpus data.
+
+        This function reads a text file specified by file_path, where each line
+        contains a corpus data for each word. It directly inserts into the database
+        using batch processing for optimal performance.
+
+        Args:
+            file_path (str): The path to the text file containing corpus data.
+            batch_size (int): Number of records to insert in each batch (default: 1000)
+
+        Returns:
+            dict: Summary of the build operation with total_inserted and skipped counts
+        """
         batch = []
         total_inserted = 0
         skipped = 0
@@ -59,8 +63,8 @@ async def build_corpus_database(file_path: str, batch_size: int = 1000):
 
                         # Insert batch when it reaches batch_size
                         if len(batch) >= batch_size:
-                            db.add_all(batch)
-                            await db.commit()
+                            self.db.add_all(batch)
+                            await self.db.commit()
                             total_inserted += len(batch)
                             print(f"Inserted {total_inserted} records...")
                             batch = []
@@ -72,21 +76,20 @@ async def build_corpus_database(file_path: str, batch_size: int = 1000):
 
                 # Insert remaining items
                 if batch:
-                    db.add_all(batch)
-                    await db.commit()
+                    self.db.add_all(batch)
+                    await self.db.commit()
                     total_inserted += len(batch)
 
             print(f"\n✓ Successfully inserted {total_inserted} morphology items")
             if skipped > 0:
                 print(f"✗ Skipped {skipped} invalid lines")
 
+            return {
+                "total_inserted": total_inserted,
+                "skipped": skipped
+            }
+
         except Exception as e:
-            await db.rollback()
+            await self.db.rollback()
             print(f"Error: {e}")
             raise
-
-
-if __name__ == "__main__":
-    file_path = "database_builder/quran-morphology.txt"
-    print(f"Starting morphology database build from {file_path}...")
-    asyncio.run(build_corpus_database(file_path))

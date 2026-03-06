@@ -2,8 +2,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
-import subprocess
-import sys
 
 from src.database import get_db
 from src.config import settings
@@ -84,14 +82,14 @@ async def clear_database(
 
 
 @router.post("/build-morphology")
-async def build_morphology():
+async def build_morphology(db: AsyncSession = Depends(get_db)):
     """
     Build morphology database from quran-morphology.txt file.
 
-    Executes the build_morphology.py script to populate the database.
+    Uses the MorphologyBuilder class to populate the database.
 
     Returns:
-        Success message with script output
+        Success message with build statistics
     """
     # Safety check - only allow in debug/development mode
     if not settings.DEBUG:
@@ -101,40 +99,24 @@ async def build_morphology():
         )
 
     try:
-        result = subprocess.run(
-            ["python", "database_builder/build_morphology.py"],
-            capture_output=True,
-            text=True,
-            timeout=600  # 10 minute timeout
-        )
+        from src.morphology_item.builder import MorphologyBuilder
 
-        # Print output to container logs
-        if result.stdout:
-            print(result.stdout, file=sys.stderr, flush=True)
-        if result.stderr:
-            print(result.stderr, file=sys.stderr, flush=True)
+        builder = MorphologyBuilder(db)
+        file_path = "database_builder/quran-morphology.txt"
 
-        if result.returncode != 0:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Script failed: {result.stderr}"
-            )
+        print(f"Starting morphology database build from {file_path}...")
+        result = await builder.build_database(file_path)
 
         return {
             "message": "Morphology database built successfully",
-            "output": result.stdout,
-            "errors": result.stderr if result.stderr else None
+            "total_inserted": result["total_inserted"],
+            "skipped": result["skipped"]
         }
 
-    except subprocess.TimeoutExpired:
-        raise HTTPException(
-            status_code=status.HTTP_504_GATEWAY_TIMEOUT,
-            detail="Build script timed out after 10 minutes"
-        )
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to run build script: {str(e)}"
+            detail=f"Failed to build morphology database: {str(e)}"
         )
 
 
