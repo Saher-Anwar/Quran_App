@@ -1,8 +1,11 @@
 """IsmBuilder class for building isms database from morphology file."""
+import logging
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from src.ism.models import IsmItem, HeavinessEnum, IsmTypeEnum, FlexibilityEnum, GenderEnum, NumberEnum
+
+logger = logging.getLogger(__name__)
 
 
 class IsmBuilder:
@@ -179,10 +182,10 @@ class IsmBuilder:
         seen_isms = set()
 
         # Load existing isms from database to check for duplicates
-        print("Loading existing isms from database...")
+        logger.info("Loading existing isms from database...")
         result = await self.db.execute(select(IsmItem.ism))
         existing_isms = {row[0] for row in result.fetchall()}
-        print(f"Found {len(existing_isms)} existing isms in database")
+        logger.info(f"Found {len(existing_isms)} existing isms in database")
 
         try:
             with open(file_path, 'r', encoding='utf-8') as file:
@@ -225,15 +228,15 @@ class IsmBuilder:
                             self.db.add_all(batch)
                             await self.db.commit()
                             total_inserted += len(batch)
-                            print(f"Processed {line_num} lines: {total_inserted} inserted, {duplicates} duplicates, {skipped} skipped")
+                            logger.info(f"Processed {line_num} lines: {total_inserted} inserted, {duplicates} duplicates, {skipped} skipped")
                             batch = []
 
                     except (ValueError, KeyError) as e:
-                        print(f"Error processing line {line_num}: {e}")
+                        logger.error(f"Error processing line {line_num}: {e}")
                         skipped += 1
                         continue
                     except Exception as e:
-                        print(f"Unexpected error at line {line_num}: {e}")
+                        logger.error(f"Unexpected error at line {line_num}: {e}")
                         skipped += 1
                         continue
 
@@ -243,10 +246,10 @@ class IsmBuilder:
                     await self.db.commit()
                     total_inserted += len(batch)
 
-            print(f"\n✓ Successfully inserted {total_inserted} ism items")
-            print(f"✗ Skipped {duplicates} duplicates")
+            logger.info(f"✓ Successfully inserted {total_inserted} ism items")
+            logger.info(f"✗ Skipped {duplicates} duplicates")
             if skipped > 0:
-                print(f"✗ Skipped {skipped} invalid/error lines")
+                logger.warning(f"✗ Skipped {skipped} invalid/error lines")
 
             return {
                 "total_inserted": total_inserted,
@@ -256,6 +259,6 @@ class IsmBuilder:
 
         except Exception as e:
             await self.db.rollback()
-            print(f"Fatal error: {e}")
-            print(f"Partial completion: {total_inserted} items inserted before error")
+            logger.error(f"Fatal error: {e}")
+            logger.error(f"Partial completion: {total_inserted} items inserted before error")
             raise

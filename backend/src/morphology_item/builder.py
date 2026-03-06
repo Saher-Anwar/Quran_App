@@ -1,7 +1,10 @@
 """MorphologyBuilder class for building morphology database from morphology file."""
+import logging
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.morphology_item.models import MorphologyItem
+
+logger = logging.getLogger(__name__)
 
 
 class MorphologyBuilder:
@@ -35,7 +38,7 @@ class MorphologyBuilder:
                 for line_num, line in enumerate(file, 1):
                     segments = line.split('\t')
                     if len(segments) < 3:
-                        print(f"Skipping invalid line {line_num}: {line.strip()}")
+                        logger.warning(f"Skipping invalid line {line_num}: {line.strip()}")
                         skipped += 1
                         continue
 
@@ -66,11 +69,11 @@ class MorphologyBuilder:
                             self.db.add_all(batch)
                             await self.db.commit()
                             total_inserted += len(batch)
-                            print(f"Inserted {total_inserted} records...")
+                            logger.info(f"Inserted {total_inserted} records...")
                             batch = []
 
                     except (ValueError, IndexError) as e:
-                        print(f"Error parsing line {line_num}: {e}")
+                        logger.error(f"Error parsing line {line_num}: {e}")
                         skipped += 1
                         continue
 
@@ -80,9 +83,9 @@ class MorphologyBuilder:
                     await self.db.commit()
                     total_inserted += len(batch)
 
-            print(f"\n✓ Successfully inserted {total_inserted} morphology items")
+            logger.info(f"✓ Successfully inserted {total_inserted} morphology items")
             if skipped > 0:
-                print(f"✗ Skipped {skipped} invalid lines")
+                logger.warning(f"✗ Skipped {skipped} invalid lines")
 
             return {
                 "total_inserted": total_inserted,
@@ -91,5 +94,5 @@ class MorphologyBuilder:
 
         except Exception as e:
             await self.db.rollback()
-            print(f"Error: {e}")
+            logger.error(f"Error: {e}")
             raise

@@ -1,8 +1,23 @@
 """Main FastAPI application."""
+import logging
+import sys
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from src.config import settings
+
+# Configure logging to match Uvicorn's format
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(levelname)s:\t %(message)s",
+    handlers=[
+        logging.StreamHandler(sys.stdout)
+    ]
+)
+
+# Set specific loggers to appropriate levels
+logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
+logging.getLogger("sqlalchemy.engine").setLevel(logging.WARNING)
 
 app = FastAPI(
     title=settings.APP_NAME,

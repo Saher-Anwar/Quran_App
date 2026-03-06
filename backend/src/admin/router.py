@@ -1,4 +1,5 @@
 """Admin utility endpoints - USE WITH CAUTION!"""
+import logging
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
@@ -6,6 +7,7 @@ from sqlalchemy import text
 from src.database import get_db
 from src.config import settings
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
@@ -104,7 +106,7 @@ async def build_morphology(db: AsyncSession = Depends(get_db)):
         builder = MorphologyBuilder(db)
         file_path = "database_builder/quran-morphology.txt"
 
-        print(f"Starting morphology database build from {file_path}...")
+        logger.info(f"Starting morphology database build from {file_path}...")
         result = await builder.build_database(file_path)
 
         return {
@@ -143,7 +145,7 @@ async def build_isms(db: AsyncSession = Depends(get_db)):
         builder = IsmBuilder(db)
         file_path = "database_builder/quran-morphology.txt"
 
-        print(f"Starting isms database build from {file_path}...")
+        logger.info(f"Starting isms database build from {file_path}...")
         result = await builder.build_database(file_path)
 
         return {
