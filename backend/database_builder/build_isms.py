@@ -7,7 +7,6 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from src.database import AsyncSessionLocal
 from src.ism.models import IsmItem, HeavinessEnum, IsmTypeEnum, FlexibilityEnum
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy import select
 
 def parse_line(line):
@@ -167,18 +166,26 @@ def test_parser():
     sample_text = "47:2:9:1	مُحَمَّدٍ	N	PN|ROOT:حمد|LEM:مُحَمَّد|GEN"
     print(parse_line(sample_text))
 
-async def build_isms_database(file_path: str, batch_size: int = 100):
+async def build_isms_database(file_path: str, batch_size: int = 1000):
     """
-    Build isms database from morphology file using individual inserts with duplicate checking.
+    Build isms database from morphology file using batch inserts.
 
     Args:
         file_path: Path to the morphology text file
-        batch_size: Number of records to process before reporting progress
+        batch_size: Number of records to insert per batch (default: 1000)
     """
     async with AsyncSessionLocal() as db:
         total_inserted = 0
         skipped = 0
         duplicates = 0
+        batch = []
+        seen_isms = set()
+
+        # Load existing isms from database to check for duplicates
+        print("Loading existing isms from database...")
+        result = await db.execute(select(IsmItem.ism))
+        existing_isms = {row[0] for row in result.fetchall()}
+        print(f"Found {len(existing_isms)} existing isms in database")
 
         try:
             with open(file_path, 'r', encoding='utf-8') as file:
@@ -189,24 +196,16 @@ async def build_isms_database(file_path: str, batch_size: int = 100):
                         skipped += 1
                         continue
 
+                    # Check if ism already exists in database or in current batch
+                    ism_word = parsed_ism["ism"]
+                    if ism_word in existing_isms or ism_word in seen_isms:
+                        duplicates += 1
+                        continue
+
                     try:
-                        # Check if item already exists
-                        result = await db.execute(
-                            select(IsmItem).where(
-                                IsmItem.ism == parsed_ism["ism"]
-                            )
-                        )
-                        existing = result.scalar_one_or_none()
-
-                        if existing:
-                            duplicates += 1
-                            if line_num % batch_size == 0:
-                                print(f"Processed {line_num} lines: {total_inserted} inserted, {duplicates} duplicates, {skipped} skipped")
-                            continue
-
                         # Create IsmItem instance
                         ism_item = IsmItem(
-                            ism=parsed_ism["ism"],
+                            ism=ism_word,
                             status=parsed_ism["status"],
                             number=parsed_ism["number"],
                             gender=parsed_ism["gender"],
@@ -221,29 +220,31 @@ async def build_isms_database(file_path: str, batch_size: int = 100):
                             token=parsed_ism["token"]
                         )
 
-                        db.add(ism_item)
-                        await db.commit()
-                        total_inserted += 1
+                        batch.append(ism_item)
+                        seen_isms.add(ism_word)
 
-                        # Report progress
-                        if line_num % batch_size == 0:
+                        # Insert batch when it reaches batch_size
+                        if len(batch) >= batch_size:
+                            db.add_all(batch)
+                            await db.commit()
+                            total_inserted += len(batch)
                             print(f"Processed {line_num} lines: {total_inserted} inserted, {duplicates} duplicates, {skipped} skipped")
+                            batch = []
 
-                    except IntegrityError as e:
-                        await db.rollback()
-                        duplicates += 1
-                        print(f"Duplicate at line {line_num}: {parsed_ism.get('ism', 'unknown')}")
-                        continue
                     except (ValueError, KeyError) as e:
-                        await db.rollback()
                         print(f"Error processing line {line_num}: {e}")
                         skipped += 1
                         continue
                     except Exception as e:
-                        await db.rollback()
                         print(f"Unexpected error at line {line_num}: {e}")
                         skipped += 1
                         continue
+
+                # Insert remaining items in batch
+                if batch:
+                    db.add_all(batch)
+                    await db.commit()
+                    total_inserted += len(batch)
 
             print(f"\n✓ Successfully inserted {total_inserted} ism items")
             print(f"✗ Skipped {duplicates} duplicates")
