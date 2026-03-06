@@ -11,7 +11,7 @@ help:
 	@echo "  make isms               			 - Run isms database builder"
 	@echo "  make clear-db                 - Clear all data from database tables"
 	@echo "  make logs                     - Show backend container logs (last 20)"
-	@echo "  make logs-live              - Follow backend container logs (live)"
+	@echo "  make logs-live              	 - Follow backend container logs (live)"
 	@echo "  make clean                    - Clean up __pycache__ and .pyc files"
 
 migration:
@@ -38,7 +38,7 @@ morphology:
 	@echo ""
 
 isms:
-	@curl -X POST "http://localhost:8000/api/admin/build-isms"
+	@curl -X POST "http://localhost:8000/api/admin/build-isms"	
 	@echo ""
 
 clear-db:

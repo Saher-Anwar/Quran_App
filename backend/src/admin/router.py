@@ -139,14 +139,14 @@ async def build_morphology():
 
 
 @router.post("/build-isms")
-async def build_isms():
+async def build_isms(db: AsyncSession = Depends(get_db)):
     """
     Build isms database from quran-morphology.txt file.
 
-    Executes the build_isms.py script to populate the database with ism (noun) data.
+    Uses the IsmBuilder class to populate the database with ism (noun) data.
 
     Returns:
-        Success message with script output
+        Success message with build statistics
     """
     # Safety check - only allow in debug/development mode
     if not settings.DEBUG:
@@ -156,38 +156,23 @@ async def build_isms():
         )
 
     try:
-        result = subprocess.run(
-            ["python", "database_builder/build_isms.py"],
-            capture_output=True,
-            text=True,
-            timeout=600  # 10 minute timeout
-        )
+        from src.ism.builder import IsmBuilder
 
-        # Print output to container logs
-        if result.stdout:
-            print(result.stdout, file=sys.stderr, flush=True)
-        if result.stderr:
-            print(result.stderr, file=sys.stderr, flush=True)
+        builder = IsmBuilder(db)
+        file_path = "database_builder/quran-morphology.txt"
 
-        if result.returncode != 0:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Script failed: {result.stderr}"
-            )
+        print(f"Starting isms database build from {file_path}...")
+        result = await builder.build_database(file_path)
 
         return {
             "message": "Isms database built successfully",
-            "output": result.stdout,
-            "errors": result.stderr if result.stderr else None
+            "total_inserted": result["total_inserted"],
+            "duplicates": result["duplicates"],
+            "skipped": result["skipped"]
         }
 
-    except subprocess.TimeoutExpired:
-        raise HTTPException(
-            status_code=status.HTTP_504_GATEWAY_TIMEOUT,
-            detail="Build script timed out after 10 minutes"
-        )
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to run build script: {str(e)}"
+            detail=f"Failed to build isms database: {str(e)}"
         )
