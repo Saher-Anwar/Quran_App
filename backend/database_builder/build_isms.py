@@ -6,7 +6,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from src.database import AsyncSessionLocal
-from src.ism.models import IsmItem, HeavinessEnum, IsmTypeEnum, FlexibilityEnum
+from src.ism.models import IsmItem, HeavinessEnum, IsmTypeEnum, FlexibilityEnum, GenderEnum, NumberEnum
 from sqlalchemy import select
 
 def parse_line(line):
@@ -81,14 +81,14 @@ def parse_description(segments : list[str]):
 
     Returns:
         JSON: A JSON containing the root word, lemma, and properties of an ism.
-    """ 
+    """
     res = {}
     cases = ["NOM", "ACC", "GEN"]
-    # Default values with full names
+    # Default values with uppercase enum values
     res['status'] = "NOM"
-    res["gender"] = "masculine"
-    res["number"] = "singular"
-    res["ism_type"] = "proper"  # Changed from "type"
+    res["gender"] = "MASCULINE"
+    res["number"] = "SINGULAR"
+    res["ism_type"] = "PROPER"
     res["root"] = None
     res["lem"] = None
     res["heaviness"] = None
@@ -102,19 +102,19 @@ def parse_description(segments : list[str]):
         elif segment in cases:
             res["status"] = segment
         elif "INDEF" in segment:
-            res["ism_type"] = "common"  # Changed from "type"
+            res["ism_type"] = "COMMON"
         else:
             temp = extract_gender_number(segment)
             if temp:
                 gender_code, number_code = temp
-                # Map codes to full names
-                res["gender"] = "masculine" if gender_code == "M" else "feminine"
+                # Map codes to uppercase full names
+                res["gender"] = "MASCULINE" if gender_code == "M" else "FEMININE"
                 if number_code == "S":
-                    res["number"] = "singular"
+                    res["number"] = "SINGULAR"
                 elif number_code == "D":
-                    res["number"] = "dual"
+                    res["number"] = "DUAL"
                 elif number_code == "P":
-                    res["number"] = "plural"
+                    res["number"] = "PLURAL"
 
     return res
 
@@ -207,8 +207,8 @@ async def build_isms_database(file_path: str, batch_size: int = 1000):
                         ism_item = IsmItem(
                             ism=ism_word,
                             status=parsed_ism["status"],
-                            number=parsed_ism["number"],
-                            gender=parsed_ism["gender"],
+                            number=NumberEnum(parsed_ism["number"]),
+                            gender=GenderEnum(parsed_ism["gender"]),
                             heaviness=HeavinessEnum(parsed_ism["heaviness"]) if parsed_ism.get("heaviness") else None,
                             ism_type=IsmTypeEnum(parsed_ism["ism_type"]) if parsed_ism.get("ism_type") else None,
                             flexibility=FlexibilityEnum(parsed_ism["flexibility"]) if parsed_ism.get("flexibility") else None,

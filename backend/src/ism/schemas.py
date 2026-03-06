@@ -2,18 +2,18 @@
 from typing import Optional
 from pydantic import BaseModel, Field
 
-from src.ism.models import HeavinessEnum, IsmTypeEnum, FlexibilityEnum
+from src.ism.models import HeavinessEnum, IsmTypeEnum, FlexibilityEnum, GenderEnum, NumberEnum
 
 
 class IsmItemBase(BaseModel):
     """Base schema for Ism Item."""
     ism: str = Field(..., min_length=1, max_length=255, description="The Arabic word")
     status: str = Field(..., min_length=1, max_length=50, description="Grammatical status")
-    number: str = Field(..., min_length=1, max_length=50, description="Number (singular, dual, plural)")
-    gender: str = Field(..., min_length=1, max_length=50, description="Gender (masculine, feminine)")
-    heaviness: Optional[HeavinessEnum] = Field(None, description="Heaviness (light or heavy)")
-    ism_type: Optional[IsmTypeEnum] = Field(None, description="Type (proper or common)")
-    flexibility: Optional[FlexibilityEnum] = Field(None, description="Flexibility (flexible, partial, or non-flexible)")
+    number: NumberEnum = Field(..., description="Number (SINGULAR, DUAL, PLURAL)")
+    gender: GenderEnum = Field(..., description="Gender (MASCULINE, FEMININE)")
+    heaviness: Optional[HeavinessEnum] = Field(None, description="Heaviness (LIGHT or HEAVY)")
+    ism_type: Optional[IsmTypeEnum] = Field(None, description="Type (PROPER or COMMON)")
+    flexibility: Optional[FlexibilityEnum] = Field(None, description="Flexibility (FLEXIBLE, PARTIAL, or NON_FLEXIBLE)")
     root: Optional[str] = Field(None, max_length=255, description="Root word")
     lem: Optional[str] = Field(None, max_length=255, description="Lemma")
     chapter: int = Field(..., ge=1, le=114, description="Chapter number (1-114)")

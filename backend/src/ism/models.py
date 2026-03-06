@@ -6,21 +6,34 @@ from src.database import Base
 
 class HeavinessEnum(enum.Enum):
     """Enum for ism heaviness."""
-    LIGHT = "light"
-    HEAVY = "heavy"
+    LIGHT = "LIGHT"
+    HEAVY = "HEAVY"
 
 
 class IsmTypeEnum(enum.Enum):
     """Enum for ism type."""
-    PROPER = "proper"
-    COMMON = "common"
+    PROPER = "PROPER"
+    COMMON = "COMMON"
 
 
 class FlexibilityEnum(enum.Enum):
     """Enum for ism flexibility."""
-    FLEXIBLE = "flexible"
-    PARTIAL = "partial"
-    NON_FLEXIBLE = "non-flexible"
+    FLEXIBLE = "FLEXIBLE"
+    PARTIAL = "PARTIAL"
+    NON_FLEXIBLE = "NON_FLEXIBLE"
+
+
+class GenderEnum(enum.Enum):
+    """Enum for ism gender."""
+    MASCULINE = "MASCULINE"
+    FEMININE = "FEMININE"
+
+
+class NumberEnum(enum.Enum):
+    """Enum for ism number."""
+    SINGULAR = "SINGULAR"
+    DUAL = "DUAL"
+    PLURAL = "PLURAL"
 
 
 class IsmItem(Base):
@@ -30,8 +43,8 @@ class IsmItem(Base):
 
     ism = Column(String(255), primary_key=True)
     status = Column(String(50), nullable=False)
-    number = Column(String(50), nullable=False)
-    gender = Column(String(50), nullable=False)
+    number = Column(Enum(NumberEnum), nullable=False)
+    gender = Column(Enum(GenderEnum), nullable=False)
     heaviness = Column(Enum(HeavinessEnum))  # Optional
     ism_type = Column(Enum(IsmTypeEnum))  # Optional
     flexibility = Column(Enum(FlexibilityEnum))  # Optional
