@@ -41,7 +41,14 @@ class IsmItem(Base):
 
     __tablename__ = "isms"
 
-    ism = Column(String(255), primary_key=True)
+    # Composite primary key (matches morphology_item structure)
+    chapter = Column(Integer, primary_key=True)
+    verse = Column(Integer, primary_key=True)
+    word_num = Column(Integer, primary_key=True)
+    token = Column(Integer, primary_key=True)
+
+    # Ism data
+    ism = Column(String(255), index=True, nullable=False)  # Indexed for searching
     status = Column(String(50), nullable=False)
     number = Column(Enum(NumberEnum), nullable=False)
     gender = Column(Enum(GenderEnum), nullable=False)
@@ -50,10 +57,6 @@ class IsmItem(Base):
     flexibility = Column(Enum(FlexibilityEnum))  # Optional
     root = Column(String(255))  # Optional
     lem = Column(String(255))  # Optional
-    chapter = Column(Integer, nullable=False)
-    verse = Column(Integer, nullable=False)
-    word_num = Column(Integer, nullable=False)
-    token = Column(Integer, nullable=False)
 
     def __repr__(self):
-        return f"<Ism {self.ism}:{self.status}:{self.number}:{self.gender}:{self.ism_type}>"
+        return f"<Ism {self.chapter}:{self.verse}:{self.word_num}:{self.token} - {self.ism}:{self.status}>"

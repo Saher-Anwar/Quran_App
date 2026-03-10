@@ -1,7 +1,6 @@
 """IsmBuilder class for building isms database from morphology file."""
 import logging
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 
 from src.ism.models import IsmItem, HeavinessEnum, IsmTypeEnum, FlexibilityEnum, GenderEnum, NumberEnum
 
@@ -177,15 +176,7 @@ class IsmBuilder:
         """
         total_inserted = 0
         skipped = 0
-        duplicates = 0
         batch = []
-        seen_isms = set()
-
-        # Load existing isms from database to check for duplicates
-        logger.info("Loading existing isms from database...")
-        result = await self.db.execute(select(IsmItem.ism))
-        existing_isms = {row[0] for row in result.fetchall()}
-        logger.info(f"Found {len(existing_isms)} existing isms in database")
 
         try:
             with open(file_path, 'r', encoding='utf-8') as file:
@@ -196,16 +187,14 @@ class IsmBuilder:
                         skipped += 1
                         continue
 
-                    # Check if ism already exists in database or in current batch
-                    ism_word = parsed_ism["ism"]
-                    if ism_word in existing_isms or ism_word in seen_isms:
-                        duplicates += 1
-                        continue
-
                     try:
                         # Create IsmItem instance
                         ism_item = IsmItem(
-                            ism=ism_word,
+                            chapter=parsed_ism["chapter"],
+                            verse=parsed_ism["verse"],
+                            word_num=parsed_ism["word_num"],
+                            token=parsed_ism["token"],
+                            ism=parsed_ism["ism"],
                             status=parsed_ism["status"],
                             number=NumberEnum(parsed_ism["number"]),
                             gender=GenderEnum(parsed_ism["gender"]),
@@ -213,22 +202,17 @@ class IsmBuilder:
                             ism_type=IsmTypeEnum(parsed_ism["ism_type"]) if parsed_ism.get("ism_type") else None,
                             flexibility=FlexibilityEnum(parsed_ism["flexibility"]) if parsed_ism.get("flexibility") else None,
                             root=parsed_ism.get("root"),
-                            lem=parsed_ism.get("lem"),
-                            chapter=parsed_ism["chapter"],
-                            verse=parsed_ism["verse"],
-                            word_num=parsed_ism["word_num"],
-                            token=parsed_ism["token"]
+                            lem=parsed_ism.get("lem")
                         )
 
                         batch.append(ism_item)
-                        seen_isms.add(ism_word)
 
                         # Insert batch when it reaches batch_size
                         if len(batch) >= batch_size:
                             self.db.add_all(batch)
                             await self.db.commit()
                             total_inserted += len(batch)
-                            logger.info(f"Processed {line_num} lines: {total_inserted} inserted, {duplicates} duplicates, {skipped} skipped")
+                            logger.info(f"Processed {line_num} lines: {total_inserted} inserted, {skipped} skipped")
                             batch = []
 
                     except (ValueError, KeyError) as e:
@@ -247,13 +231,11 @@ class IsmBuilder:
                     total_inserted += len(batch)
 
             logger.info(f"✓ Successfully inserted {total_inserted} ism items")
-            logger.info(f"✗ Skipped {duplicates} duplicates")
             if skipped > 0:
                 logger.warning(f"✗ Skipped {skipped} invalid/error lines")
 
             return {
                 "total_inserted": total_inserted,
-                "duplicates": duplicates,
                 "skipped": skipped
             }
 

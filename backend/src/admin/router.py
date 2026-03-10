@@ -151,7 +151,6 @@ async def build_isms(db: AsyncSession = Depends(get_db)):
         return {
             "message": "Isms database built successfully",
             "total_inserted": result["total_inserted"],
-            "duplicates": result["duplicates"],
             "skipped": result["skipped"]
         }
 
