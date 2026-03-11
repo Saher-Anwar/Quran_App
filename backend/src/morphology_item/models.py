@@ -14,7 +14,9 @@ class MorphologyItem(Base):
     token = Column(Integer, primary_key=True)
     word = Column(String(255))  # Arabic word (optional)
     tag = Column(String(50), nullable=False)  # Part of speech tag
-    info = Column(Text, nullable=False)  # Morphological information
+    lem = Column(String(255))  # Lemma extracted from info (optional)
+    root = Column(String(255))  # Root extracted from info (optional)
+    info = Column(Text, nullable=False)  # Raw morphological information
 
     def __repr__(self):
         return f"<MorphologyItem {self.chapter}:{self.verse}:{self.word_num}:{self.token}>"

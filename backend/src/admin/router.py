@@ -125,9 +125,10 @@ async def build_morphology(db: AsyncSession = Depends(get_db)):
 @router.post("/build-isms")
 async def build_isms(db: AsyncSession = Depends(get_db)):
     """
-    Build isms database from quran-morphology.txt file.
+    Build isms database from morphology table.
 
-    Uses the IsmBuilder class to populate the database with ism (noun) data.
+    Uses the IsmBuilder class to extract unique isms from morphology_items table
+    and populate the isms table with grammatical properties.
 
     Returns:
         Success message with build statistics
@@ -143,10 +144,9 @@ async def build_isms(db: AsyncSession = Depends(get_db)):
         from src.ism.builder import IsmBuilder
 
         builder = IsmBuilder(db)
-        file_path = "database_builder/quran-morphology.txt"
 
-        logger.info(f"Starting isms database build from {file_path}...")
-        result = await builder.build_database(file_path)
+        logger.info(f"Starting isms database build from morphology table...")
+        result = await builder.build_database()
 
         return {
             "message": "Isms database built successfully",

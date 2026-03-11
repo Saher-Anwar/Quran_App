@@ -16,7 +16,7 @@ logging.basicConfig(
 )
 
 # Set specific loggers to appropriate levels
-logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
+logging.getLogger("uvicorn.access").setLevel(logging.INFO)
 logging.getLogger("sqlalchemy.engine").setLevel(logging.WARNING)
 
 app = FastAPI(
