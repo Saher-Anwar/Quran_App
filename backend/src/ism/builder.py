@@ -3,9 +3,9 @@ import logging
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
-from src.ism.models import IsmItem, IsmTypeEnum, GenderEnum, NumberEnum
+from src.ism.models import IsmItem, IsmTypeEnum, GenderEnum, NumberEnum, HeavinessEnum
 from src.morphology_item.models import MorphologyItem
-
+from pyarabic.araby import is_haraka, is_tanwin
 logger = logging.getLogger(__name__)
 
 
@@ -90,6 +90,50 @@ class IsmBuilder:
 
         return (gender, number)
 
+    @staticmethod
+    def calculate_heaviness(word: dict) -> HeavinessEnum:
+        """
+        Calculate heaviness of a word.
+        The word is heavy by default. The word is light if it's singular and the last harakah is not tanwin or
+        if the word is non-singular and doesn't end in specific ending combinations.
+
+        Args:
+            word: Dictionary containing ism data including "ism", "number", and "gender"
+
+        Returns:
+            HeavinessEnum: LIGHT or HEAVY
+        """
+        if word['number'] == 'SINGULAR':
+            # For singular: light if last haraka is NOT tanween
+            for token in reversed(word["ism"]):
+                if is_haraka(token):
+                    if is_tanwin(token):
+                        return HeavinessEnum.HEAVY
+                    else:
+                        return HeavinessEnum.LIGHT
+
+        # For non-singular: check ending combinations
+        masc_ending_combinations = ['ونَ', 'ينَ', 'انِ', 'ينِ']
+        fem_ending_combinations = ['اتٌ', 'اتٍ']
+
+        word_text = word["ism"]
+
+        if word["gender"] == "MASCULINE":
+            # If word ends with masculine sound plural/dual endings, return HEAVY
+            for ending in masc_ending_combinations:
+                if word_text.endswith(ending):
+                    return HeavinessEnum.HEAVY
+            # Otherwise LIGHT for non-singular masculine
+            return HeavinessEnum.LIGHT
+        else:
+            # If word ends with feminine sound plural endings, return HEAVY
+            for ending in fem_ending_combinations:
+                if word_text.endswith(ending):
+                    return HeavinessEnum.HEAVY
+            # Otherwise LIGHT for non-singular feminine
+            return HeavinessEnum.LIGHT
+
+
     async def build_database(self, batch_size: int = 1000) -> dict:
         """
         Build isms database from morphology table.
@@ -124,12 +168,17 @@ class IsmBuilder:
                 if not morph_item.normalized_word:
                     skipped += 1
                     continue
-
+                
                 # Skip pronouns (PRON in info field)
-                if "PRON" in morph_item.info or "ROOT" not in morph_item.info:
+                if "PRON" in morph_item.info:
                     skipped += 1
                     continue
-
+                
+                # Include proper nouns
+                if "PN" not in morph_item.info and "ROOT" not in morph_item.info:
+                    skipped += 1
+                    continue
+                
                 # Skip duplicates (same normalized word form)
                 if morph_item.normalized_word in seen_isms:
                     continue
@@ -142,6 +191,9 @@ class IsmBuilder:
                         skipped += 1
                         continue
 
+                    # Calculate heaviness
+                    heaviness = self.calculate_heaviness(ism_data)
+
                     # Create IsmItem with normalized_word as the ism
                     ism_item = IsmItem(
                         ism=ism_data["ism"],
@@ -149,7 +201,7 @@ class IsmBuilder:
                         number=NumberEnum(ism_data["number"]),
                         gender=GenderEnum(ism_data["gender"]),
                         ism_type=IsmTypeEnum(ism_data["ism_type"]),
-                        heaviness=None,  # Not extracted from current parsing
+                        heaviness=heaviness,
                         flexibility=None  # Not extracted from current parsing
                     )
 
