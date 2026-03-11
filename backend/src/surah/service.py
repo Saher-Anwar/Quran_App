@@ -56,16 +56,16 @@ class SurahService:
         if not morph_items:
             return {"chapter": chapter, "verses": []}
 
-        # Get all unique words from morphology items to query isms
-        unique_words = {item.word for item in morph_items if item.word}
+        # Get all unique normalized words from morphology items to query isms
+        unique_normalized_words = {item.normalized_word for item in morph_items if item.normalized_word}
 
-        # Query isms for these words
+        # Query isms for these normalized words
         ism_result = await db.execute(
-            select(IsmItem).where(IsmItem.ism.in_(unique_words))
+            select(IsmItem).where(IsmItem.ism.in_(unique_normalized_words))
         )
         ism_items = ism_result.scalars().all()
 
-        # Create ism lookup dictionary by word (with diacritics)
+        # Create ism lookup dictionary by normalized_word
         ism_lookup = {ism.ism: ism for ism in ism_items}
 
         # Structure the data
@@ -82,7 +82,7 @@ class SurahService:
 
         Args:
             morph_items: List of MorphologyItem objects
-            ism_lookup: Dictionary mapping word (with diacritics) to IsmItem
+            ism_lookup: Dictionary mapping normalized_word to IsmItem
             chapter: Chapter number
 
         Returns:
@@ -121,9 +121,9 @@ class SurahService:
             verses[verse_num]["words"][word_num]["tokens"].append(token_data)
             verses[verse_num]["words"][word_num]["complete_word"] += item.word or ""
 
-            # Check if this token is an ism (join on morphology.word = isms.ism)
-            if item.word and item.word in ism_lookup:
-                ism = ism_lookup[item.word]
+            # Check if this token is an ism (join on morphology.normalized_word = isms.ism)
+            if item.normalized_word and item.normalized_word in ism_lookup:
+                ism = ism_lookup[item.normalized_word]
                 verses[verse_num]["words"][word_num]["is_ism"] = True
                 verses[verse_num]["words"][word_num]["ism_properties"] = {
                     "status": ism.status,

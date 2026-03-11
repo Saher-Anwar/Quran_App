@@ -12,7 +12,8 @@ class MorphologyItem(Base):
     verse = Column(Integer, primary_key=True)
     word_num = Column(Integer, primary_key=True)
     token = Column(Integer, primary_key=True)
-    word = Column(String(255))  # Arabic word (optional)
+    word = Column(String(255))  # Arabic word with all diacritics (optional)
+    normalized_word = Column(String(255))  # Word with only letters and case endings (optional)
     tag = Column(String(50), nullable=False)  # Part of speech tag
     lem = Column(String(255))  # Lemma extracted from info (optional)
     root = Column(String(255))  # Root extracted from info (optional)

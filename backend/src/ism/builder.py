@@ -120,24 +120,24 @@ class IsmBuilder:
 
         try:
             for morph_item in morphology_nouns:
-                # Skip if word is None
-                if not morph_item.word:
+                # Skip if normalized_word is None
+                if not morph_item.normalized_word:
                     skipped += 1
                     continue
 
-                # Skip duplicates (same word form)
-                if morph_item.word in seen_isms:
+                # Skip duplicates (same normalized word form)
+                if morph_item.normalized_word in seen_isms:
                     continue
 
                 try:
-                    # Parse info to get ism properties
-                    ism_data = self.parse_info_to_ism(morph_item.word, morph_item.info)
+                    # Parse info to get ism properties (use normalized_word)
+                    ism_data = self.parse_info_to_ism(morph_item.normalized_word, morph_item.info)
 
                     if not ism_data:
                         skipped += 1
                         continue
 
-                    # Create IsmItem
+                    # Create IsmItem with normalized_word as the ism
                     ism_item = IsmItem(
                         ism=ism_data["ism"],
                         status=ism_data["status"],
@@ -149,7 +149,7 @@ class IsmBuilder:
                     )
 
                     batch.append(ism_item)
-                    seen_isms.add(morph_item.word)
+                    seen_isms.add(morph_item.normalized_word)
 
                     # Insert batch when it reaches batch_size
                     if len(batch) >= batch_size:

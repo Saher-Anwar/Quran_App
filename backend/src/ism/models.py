@@ -41,7 +41,7 @@ class IsmItem(Base):
 
     __tablename__ = "isms"
 
-    # Primary key: exact word with diacritics
+    # Primary key: normalized word (letters + case endings only)
     ism = Column(String(255), primary_key=True)
 
     # Grammatical properties (all required except heaviness and flexibility)

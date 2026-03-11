@@ -15,6 +15,39 @@ class MorphologyBuilder:
         self.db = db
 
     @staticmethod
+    def normalize_word(word: str) -> str:
+        """
+        Normalize Arabic word by keeping only letters and case endings.
+
+        Case endings to keep:
+        - ً (fathatayn) - U+064B
+        - ٌ (dammatayn) - U+064C
+        - ٍ (kasratayn) - U+064D
+        - َ (fatha) - U+064E
+        - ُ (damma) - U+064F
+        - ِ (kasra) - U+0650
+
+        Args:
+            word: Arabic word with diacritics
+
+        Returns:
+            Normalized word with only letters and case endings
+        """
+        if not word:
+            return ""
+
+        # Case ending diacritics to keep
+        case_endings = {'\u064B', '\u064C', '\u064D', '\u064E', '\u064F', '\u0650'}
+
+        # Keep only Arabic letters and case endings
+        normalized = ''.join(
+            char for char in word
+            if char.isalpha() or char in case_endings
+        )
+
+        return normalized
+
+    @staticmethod
     def extract_lem_and_root(info: str) -> tuple[str | None, str | None]:
         """
         Extract lemma and root from info field.
@@ -85,6 +118,9 @@ class MorphologyBuilder:
                         # Extract lem and root from info
                         lem, root = self.extract_lem_and_root(info)
 
+                        # Normalize word (only letters and case endings)
+                        normalized_word = self.normalize_word(word) if word else None
+
                         # Construct morphology item
                         item = MorphologyItem(
                             chapter=int(chapter),
@@ -92,6 +128,7 @@ class MorphologyBuilder:
                             word_num=int(word_num),
                             token=int(token),
                             word=word,
+                            normalized_word=normalized_word,
                             tag=tag,
                             lem=lem,
                             root=root,
