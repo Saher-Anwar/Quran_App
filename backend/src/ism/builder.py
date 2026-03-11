@@ -125,6 +125,11 @@ class IsmBuilder:
                     skipped += 1
                     continue
 
+                # Skip pronouns (PRON in info field)
+                if "PRON" in morph_item.info or "ROOT" not in morph_item.info:
+                    skipped += 1
+                    continue
+
                 # Skip duplicates (same normalized word form)
                 if morph_item.normalized_word in seen_isms:
                     continue
