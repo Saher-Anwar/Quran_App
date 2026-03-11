@@ -56,25 +56,17 @@ class SurahService:
         if not morph_items:
             return {"chapter": chapter, "verses": []}
 
-        # Build isms query for the same range
-        ism_query = select(IsmItem).where(IsmItem.chapter == chapter)
+        # Get all unique words from morphology items to query isms
+        unique_words = {item.word for item in morph_items if item.word}
 
-        if start_verse is not None and end_verse is not None:
-            ism_query = ism_query.where(IsmItem.verse.between(start_verse, end_verse))
-        elif start_verse is not None:
-            ism_query = ism_query.where(IsmItem.verse >= start_verse)
-        elif end_verse is not None:
-            ism_query = ism_query.where(IsmItem.verse <= end_verse)
-
-        # Execute ism query
-        ism_result = await db.execute(ism_query)
+        # Query isms for these words
+        ism_result = await db.execute(
+            select(IsmItem).where(IsmItem.ism.in_(unique_words))
+        )
         ism_items = ism_result.scalars().all()
 
-        # Create ism lookup dictionary by (chapter, verse, word_num, token)
-        ism_lookup = {
-            (ism.chapter, ism.verse, ism.word_num, ism.token): ism
-            for ism in ism_items
-        }
+        # Create ism lookup dictionary by word (with diacritics)
+        ism_lookup = {ism.ism: ism for ism in ism_items}
 
         # Structure the data
         return SurahService._structure_reading_view(morph_items, ism_lookup, chapter)
@@ -82,7 +74,7 @@ class SurahService:
     @staticmethod
     def _structure_reading_view(
         morph_items: List[MorphologyItem],
-        ism_lookup: Dict[tuple, IsmItem],
+        ism_lookup: Dict[str, IsmItem],
         chapter: int
     ) -> Dict[str, Any]:
         """
@@ -90,7 +82,7 @@ class SurahService:
 
         Args:
             morph_items: List of MorphologyItem objects
-            ism_lookup: Dictionary mapping (chapter, verse, word_num, token) to IsmItem
+            ism_lookup: Dictionary mapping word (with diacritics) to IsmItem
             chapter: Chapter number
 
         Returns:
@@ -122,15 +114,16 @@ class SurahService:
                 "text": item.word or "",
                 "tag": item.tag,
                 "info": item.info,
+                "lem": item.lem,
+                "root": item.root,
                 "relationship_role": None  # Will be set when calculating relationships
             }
             verses[verse_num]["words"][word_num]["tokens"].append(token_data)
             verses[verse_num]["words"][word_num]["complete_word"] += item.word or ""
 
-            # Check if this token is an ism
-            ism_key = (item.chapter, item.verse, item.word_num, item.token)
-            if ism_key in ism_lookup:
-                ism = ism_lookup[ism_key]
+            # Check if this token is an ism (join on morphology.word = isms.ism)
+            if item.word and item.word in ism_lookup:
+                ism = ism_lookup[item.word]
                 verses[verse_num]["words"][word_num]["is_ism"] = True
                 verses[verse_num]["words"][word_num]["ism_properties"] = {
                     "status": ism.status,
@@ -138,9 +131,7 @@ class SurahService:
                     "gender": ism.gender.value if ism.gender else None,
                     "ism_type": ism.ism_type.value if ism.ism_type else None,
                     "heaviness": ism.heaviness.value if ism.heaviness else None,
-                    "flexibility": ism.flexibility.value if ism.flexibility else None,
-                    "root": ism.root,
-                    "lem": ism.lem
+                    "flexibility": ism.flexibility.value if ism.flexibility else None
                 }
 
         # Calculate relationships and convert to lists
