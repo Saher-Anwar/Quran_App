@@ -83,6 +83,69 @@ async def clear_database(
         )
 
 
+@router.delete("/clear-table/{table_name}")
+async def clear_table(
+    table_name: str,
+    db: AsyncSession = Depends(get_db),
+    confirm: str = None
+):
+    """
+    Clear all data from a specific table.
+
+    ⚠️ WARNING: This will delete ALL data from the specified table! Use only in development/testing.
+
+    Args:
+        table_name: Name of the table to clear
+        confirm: Must be set to "YES_DELETE" to proceed
+        db: Database session
+
+    Returns:
+        Success message with deleted count
+    """
+    # Safety check - only allow in debug/development mode
+    if not settings.DEBUG:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="This endpoint is only available in debug/development mode"
+        )
+
+    # Require explicit confirmation
+    if confirm != "YES_DELETE":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Must provide confirm='YES_DELETE' query parameter"
+        )
+
+    # Validate table name exists
+    valid_tables = ["morphology_items", "isms"]
+    if table_name not in valid_tables:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid table name. Must be one of: {', '.join(valid_tables)}"
+        )
+
+    try:
+        # Get count before deletion
+        count_result = await db.execute(text(f"SELECT COUNT(*) FROM {table_name}"))
+        count = count_result.scalar()
+
+        # Truncate table
+        await db.execute(text(f"TRUNCATE TABLE {table_name} RESTART IDENTITY CASCADE"))
+        await db.commit()
+
+        return {
+            "message": f"Table '{table_name}' cleared successfully",
+            "table": table_name,
+            "deleted_count": count
+        }
+    except Exception as e:
+        await db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to clear table: {str(e)}"
+        )
+
+
 @router.post("/build-morphology")
 async def build_morphology(db: AsyncSession = Depends(get_db)):
     """
