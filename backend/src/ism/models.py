@@ -37,23 +37,20 @@ class NumberEnum(enum.Enum):
 
 
 class IsmItem(Base):
-    """Model for storing ism (word) morphology data."""
+    """Model for storing ism (word) grammatical properties."""
 
     __tablename__ = "isms"
 
+    # Primary key: normalized word (letters + case endings only)
     ism = Column(String(255), primary_key=True)
+
+    # Grammatical properties (all required except heaviness and flexibility)
     status = Column(String(50), nullable=False)
     number = Column(Enum(NumberEnum), nullable=False)
     gender = Column(Enum(GenderEnum), nullable=False)
+    ism_type = Column(Enum(IsmTypeEnum), nullable=False)  # Required
     heaviness = Column(Enum(HeavinessEnum))  # Optional
-    ism_type = Column(Enum(IsmTypeEnum))  # Optional
     flexibility = Column(Enum(FlexibilityEnum))  # Optional
-    root = Column(String(255))  # Optional
-    lem = Column(String(255))  # Optional
-    chapter = Column(Integer, nullable=False)
-    verse = Column(Integer, nullable=False)
-    word_num = Column(Integer, nullable=False)
-    token = Column(Integer, nullable=False)
 
     def __repr__(self):
         return f"<Ism {self.ism}:{self.status}:{self.number}:{self.gender}:{self.ism_type}>"

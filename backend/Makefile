@@ -1,4 +1,4 @@
-.PHONY: help migration upgrade downgrade restart test build-morphology build-isms clear-db logs logs-follow clean
+.PHONY: help migration upgrade downgrade restart test build-morphology build-isms clear-db clear-isms logs logs-follow clean
 
 help:
 	@echo "Available commands:"
@@ -10,6 +10,7 @@ help:
 	@echo "  make morphology         			 - Run morphology database builder"
 	@echo "  make isms               			 - Run isms database builder"
 	@echo "  make clear-db                 - Clear all data from database tables"
+	@echo "  make clear-isms               - Clear isms table only"
 	@echo "  make logs                     - Show backend container logs (last 20)"
 	@echo "  make logs-live              	 - Follow backend container logs (live)"
 	@echo "  make clean                    - Clean up __pycache__ and .pyc files"
@@ -43,6 +44,10 @@ isms:
 
 clear-db:
 	@curl -X DELETE "http://localhost:8000/api/admin/clear-database?confirm=YES_DELETE_ALL"
+	@echo ""
+
+clear-isms:
+	@curl -X DELETE "http://localhost:8000/api/admin/clear-table/isms?confirm=YES_DELETE"
 	@echo ""
 
 logs:
