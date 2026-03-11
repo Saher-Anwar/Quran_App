@@ -57,7 +57,9 @@ async def health_check():
 from src.admin.router import router as admin_router
 from src.morphology_item.router import router as morphology_item_router
 from src.ism.router import router as ism_router
+from src.surah.router import router as surah_router
 
 app.include_router(admin_router, prefix="/api/admin", tags=["Admin"])
 app.include_router(morphology_item_router, prefix="/api/morphology_item", tags=["Morphology"])
 app.include_router(ism_router, prefix="/api/ism", tags=["Ism"])
+app.include_router(surah_router, prefix="/api/surahs", tags=["Surah"])

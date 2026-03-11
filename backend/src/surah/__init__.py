@@ -1,0 +1,1 @@
+"""Surah reading view package."""
